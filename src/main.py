@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from kittentts import KittenTTS
 import soundfile as sf
 import io
+import torch
 
 app = FastAPI(title="KittenTTS API")
 

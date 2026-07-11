@@ -1,5 +1,5 @@
 # Modify line 1: Switch to a PyTorch CUDA runtime image
-FROM docker.io/pytorch/pytorch:2.2.1-cuda12.1-cudnn8-runtime
+FROM nvcr.io/nvidia/pytorch:26.06-py3
 
 WORKDIR /src
 
