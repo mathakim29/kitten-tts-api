@@ -23,3 +23,12 @@ def generate_audio(req: TTSRequest):
         return "ok"
     else:
         return "error"
+
+@app.get("/gpu-status")
+async def get_gpu_status():
+    is_available = torch.cuda.is_available()
+    return {
+        "cuda_available": is_available,
+        "device_name": torch.cuda.get_device_name(0) if is_available else None,
+        "device_count": torch.cuda.device_count()
+    }
