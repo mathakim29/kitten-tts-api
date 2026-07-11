@@ -5,10 +5,11 @@ import soundfile as sf
 import io
 import torch
 
+# Downloads the 80M model on first run. Options: mini-0.8, micro-0.8, nano-0.8
+model = KittenTTS("KittenML/kitten-tts-mini-0.8", cache_dir="/src/.cache")
 app = FastAPI(title="KittenTTS API")
 
-# Downloads the 80M model on first run. Options: mini-0.8, micro-0.8, nano-0.8
-model = KittenTTS("KittenML/kitten-tts-mini-0.8")
+
 
 class TTSRequest(BaseModel):
     text: str
