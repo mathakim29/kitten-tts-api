@@ -1,1 +1,0 @@
-VOICE_LIST = ['Bella', 'Jasper', 'Luna', 'Bruno', 'Rosie', 'Hugo', 'Kiki', 'Leo']
