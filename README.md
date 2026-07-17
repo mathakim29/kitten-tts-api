@@ -1,13 +1,8 @@
-# Kitten-TTS Docker/Podman Bootstrap
+# Kitten-TTS API
 
-Lightweight bootstrap to build and run the Kitten-TTS API using Docker or Podman.
+Lightweight API container for KittenTTS
 
 Original project: https://github.com/KittenML/KittenTTS
-
-## Contents
-- build_n_run.sh — builds an image from an embedded Dockerfile and runs the container (auto-detects docker/podman; accepts --use docker|podman).
-- api.py — FastAPI application exposing TTS endpoints and serving generated audio under /out.
-- export/ (.cache/) — local folders mounted into the container for outputs and caches.
 
 ## Prerequisites
 - Docker or Podman installed
@@ -15,11 +10,8 @@ Original project: https://github.com/KittenML/KittenTTS
 - (Optional) Nvidia GPU + drivers for --gpus=all container run
 
 ## Quickstart — using the helper script
-Make executable then run:
-chmod +x ./build_n_run.sh
-
-Auto-detect:
-./build_n_run.sh
+> [!IMPORTANT]
+> By default the script will use Docker, then Podman 
 
 Force Docker:
 ./build_n_run.sh --use docker
@@ -31,12 +23,6 @@ The script:
 - builds an image named `myapp` from an embedded Dockerfile
 - mounts ./ .cache into the container
 - exposes port 8000 and starts uvicorn: python3 -m uvicorn api:app --host 0.0.0.0
-
-
-## Environment variables (used by containerized app)
-- KITTEN_TTS_PORT — server port (default: 8080/8000)
-- KITTEN_TTS_MODEL — model to load (e.g., small)
-- KITTEN_TTS_API_KEY — optional external provider key
 
 ## API (api.py)
 Base URL: http://HOST:PORT
