@@ -5,6 +5,7 @@ from datetime import datetime
 from threading import Lock
 from typing import Dict, Optional
 
+import torch
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -17,6 +18,7 @@ import subprocess
 
 # Constants 
 OUTPUT_FOLDER = "export"
+CUDA_ENABLED = torch.cuda.is_available() 
 
 class API_Process(BaseModel):
     text: str = Field(..., min_length=1, max_length=1500)
@@ -51,7 +53,7 @@ class API_Core:
             req["started_at"] = datetime.utcnow()
 
         try:
-            model = KittenTTS("KittenML/kitten-tts-mini-0.8")
+            model = KittenTTS("KittenML/kitten-tts-mini-0.8", backend="cuda" if CUDA_ENABLED)
             audio = model.generate(req["text"], voice=req["voice"])
             
             # NOTE - Save the audio to a file in the outputs directory 
