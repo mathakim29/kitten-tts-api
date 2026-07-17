@@ -2,6 +2,8 @@
 
 Lightweight bootstrap to build and run the Kitten-TTS API using Docker or Podman.
 
+Original project: https://github.com/KittenML/KittenTTS
+
 ## Contents
 - build_n_run.sh — builds an image from an embedded Dockerfile and runs the container (auto-detects docker/podman; accepts --use docker|podman).
 - api.py — FastAPI application exposing TTS endpoints and serving generated audio under /out.
