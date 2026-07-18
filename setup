@@ -22,7 +22,7 @@ logger.error("Error message")
 logger.critical("Critical message")
 
 
-IMAGE_NAME = "myapp"
+IMAGE_NAME = "kittentts-api:latest"
 
 
 def run_command(cmd, **kwargs):
