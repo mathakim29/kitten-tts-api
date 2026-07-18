@@ -23,6 +23,10 @@ build/
 out/
 .temp/
 .tmp/
+__pycache__/
+
+
+kitten.db
 
 # Keep export and cache directories themselves in the repo, but ignore their contents
 export/*

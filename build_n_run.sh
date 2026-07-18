@@ -89,5 +89,4 @@ echo "${blue}Building image:${reset} $IMAGE_NAME"
 echo "$DOCKERFILE" | $CONTAINER_TOOL build -t "${IMAGE_NAME}" -
 
 # Run
-$CONTAINER_TOOL run -it --gpus=all -v "$CACHE_VOL" -v "$WORK_VOL" -p 8000:8000 "${IMAGE_NAME}" python3 -m uvicorn api:app --host 0.0.0.0
-# ...existing code...
+$CONTAINER_TOOL run -it --gpus=all -v "$CACHE_VOL" -v "$WORK_VOL" -p 8000:8000 "${IMAGE_NAME}" python3 -m uvicorn api:app --host 0.0.0.0 --reload
