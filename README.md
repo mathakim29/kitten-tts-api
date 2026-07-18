@@ -1,71 +1,177 @@
 # Kitten-TTS API
 
-Lightweight API container for KittenTTS
+Lightweight, stateless API for KittenTTS text-to-speech synthesis with immediate file download.
 
-Original project: https://github.com/KittenML/KittenTTS
+**Original project:** https://github.com/KittenML/KittenTTS
+
+## Features
+
+- **Instant Downloads** – Synthesize and download audio in a single request
+- **Lightweight** – Tiny lightweight models that runs on CPU without GPU
+- **8 Built-in Voices** – Bella, Jasper, Luna, Bruno, Rosie, Hugo, Kiki, Leo
+- **Speed Control** – Adjustable playback speed (0.5x–2.0x)
+- **Structured Logging** – Consistent format with request tracing
+- **Simple & Stateless** – No database, no request tracking
 
 ## Prerequisites
+
 - Docker or Podman installed
 - Git
-- (Optional) Nvidia GPU + drivers for --gpus=all container run
 
-## Quickstart — using the helper script
+## Quickstart — Using the Helper Script
+
 > [!IMPORTANT]
-> By default the script will use Docker, then Podman 
+> By default the script will use Docker, then Podman
 
-Force Docker:
-./build_n_run.sh --use docker
+**Force Docker:**
+```sh
+cat setup | python3 --use docker
+```
 
-Force Podman (adds SELinux :Z volume label):
-./build_n_run.sh --use podman
+**Force Podman** (adds SELinux `:Z` volume label):
+```sh
+cat setup | python3 --use podman
+```
 
 The script:
-- builds an image named `myapp` from an embedded Dockerfile
-- mounts ./ .cache into the container
-- exposes port 8000 and starts uvicorn: python3 -m uvicorn api:app --host 0.0.0.0
+- Builds an image named `myapp` from an embedded Dockerfile
+- Mounts `./` and `.cache` into the container
+- Exposes port 8000 and starts uvicorn
 
-## API (api.py)
-Base URL: http://HOST:PORT
+## API Endpoints
 
-- POST /requests
-  - Body: { "text": "Hello", "voice": "Jasper" }
-  - Returns request object (id, status, timestamps). Processes in background.
+**Base URL:** `http://HOST:PORT`
 
-- GET /requests
-  - Lists requests for this client (cookie-based client_id).
+### POST /generate
+**Synthesize text to speech and download audio immediately.**
 
-- GET /requests/{request_id}
-  - Retrieve a single request (client-scoped).
+**Request:**
+```json
+{
+  "text": "Hello world",
+  "voice": "Jasper"
+}
+```
 
-- DELETE /requests
-  - Deletes this client's requests and removes files from the outputs directory.
+**Parameters:**
+- `text` (string, required): Input text (1–1500 characters)
+- `voice` (string, optional): Voice name. Default: `"Jasper"`
+  - Available: `Bella`, `Jasper`, `Luna`, `Bruno`, `Rosie`, `Hugo`, `Kiki`, `Leo`
 
-Generated audio served at /out (static mount). Example response includes output_url like `/out/file_<id>.wav`.
+**Response:**
+- HTTP 200 – WAV file streamed as download (`audio_<request_id>.wav`)
+- HTTP 500 – Synthesis failed (check logs for details)
+
+### DELETE /cleanup
+**Delete all generated audio files from the output folder.**
+
+**Response:**
+```json
+{
+  "message": "Cleaned up 5 files",
+  "count": 5
+}
+```
+
+### GET /health
+**Health check endpoint.**
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "version": "0.1.0"
+}
+```
 
 ## Examples
-Create request:
+
+### Synthesize and Save
 ```sh
-curl -s -X POST http://localhost:8000/requests -H "Content-Type: application/json" \
-  -d '{"text":"Hello world","voice":"Jasper"}'
+curl -X POST http://localhost:8000/generate \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Hello world","voice":"Jasper"}' \
+  -o output.wav
 ```
-Get list:
-curl http://localhost:8000/requests
 
-Fetch file (after completed):
-open http://localhost:8000/out/file_UUID.wav
+### Python Client
+```python
+import requests
 
-## Development
-- Edit code locally; use the helper script to rebuild and run with source mounted.
-- The script mounts the repo into /workspace inside the container for live debugging.
+response = requests.post(
+    "http://localhost:8000/generate",
+    json={
+        "text": "This is a test of Kitten TTS",
+        "voice": "Luna"
+    }
+)
+
+with open("output.wav", "wb") as f:
+    f.write(response.content)
+```
+
+### Cleanup
+```sh
+curl -X DELETE http://localhost:8000/cleanup
+```
+
+## Configuration
+
+Edit `api.py` to customize:
+
+- **Output folder:** Change `OUTPUT_FOLDER` path (default: `/tmp/kitten_tts_output`)
+- **Model:** Change model ID in `KittenTTS()` initialization (default: `KittenML/kitten-tts-mini-0.8`)
+  - Available models: `kitten-tts-nano-0.8`, `kitten-tts-micro-0.8`, `kitten-tts-mini-0.8`
+- **Port/Host:** Modify uvicorn config in `if __name__ == "__main__"` block
+
+
+## Architecture
+
+- **No Database** – Stateless API (no SQLite or request tracking)
+- **Immediate Processing** – Synthesis happens synchronously, returns file directly
+- **Auto-cleanup** – Use `DELETE /cleanup` to free disk space
+- **Automatic Model Download** – First run downloads model from Hugging Face (~80MB)
 
 ## Notes
-- build_n_run.sh maps .cache -> /root/.cache and repo -> /workspace; podman uses :Z label.
-- API stores request state in-memory — not persistent across container restarts.
-- Ensure proper GPU support and pip package availability when using prebuilt runtime images.
 
-## TO-DO
-- [ ] add gpu/cpu detection
-- [ ] simple interface example
-- [ ] list of other models/voices 
-- [ ] better documentation overall
+- `.cache` maps to `/root/.cache` (model cache); podman uses `:Z` SELinux label
+- Files saved to `/tmp/kitten_tts_output` by default (configurable)
+- Ensure sufficient disk space for output files
+- Each request generates a unique WAV file; use cleanup endpoint to manage storage
 
+## Available Voices
+
+All KittenTTS v0.8 voices:
+
+| Voice | Gender | Style |
+|-------|--------|-------|
+| Bella | Female | Neutral |
+| Jasper | Male | Neutral |
+| Luna | Female | Expressive |
+| Bruno | Male | Deep |
+| Rosie | Female | Cheerful |
+| Hugo | Male | Calm |
+| Kiki | Female | Bright |
+| Leo | Male | Warm |
+
+## Troubleshooting
+
+**Synthesis is slow on first request:**
+- The model downloads (~80MB) and loads on first use. Subsequent requests are faster.
+
+**HTTP 500 error:**
+- Check logs for detailed error message with request ID (e.g., `[a1b2c3d4]`)
+- Verify text length (1–1500 characters)
+- Ensure voice name is valid
+
+**Disk space filling up:**
+- Run `DELETE /cleanup` to remove old WAV files
+
+## Future Improvements
+
+- [ ] Batch synthesis support
+- [ ] Custom voice support
+- [ ] Audio format options (MP3, OGG, etc.)
+- [ ] Speed parameter in request body
+- [ ] Web UI example
+- [ ] Performance benchmarking docs
