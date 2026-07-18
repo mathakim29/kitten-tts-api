@@ -1,0 +1,153 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Create a logger
+logger = logging.getLogger(__name__)
+
+# Use it
+logger.debug("Debug message")
+logger.info("Info message")
+logger.warning("Warning message")
+logger.error("Error message")
+logger.critical("Critical message")
+
+
+IMAGE_NAME = "myapp"
+
+
+def run_command(cmd, **kwargs):
+    print(f"\033[34mRunning:\033[0m {' '.join(cmd)}")
+    try:
+        subprocess.run(cmd, check=True, **kwargs)
+    except subprocess.CalledProcessError as e:
+        print(f"\033[31m\033[1mError:\033[0m Command failed with exit code {e.returncode}: {' '.join(cmd)}")
+        sys.exit(e.returncode)
+    except Exception as e:
+        print(f"\033[31m\033[1mError:\033[0m Unexpected error running command: {e}")
+        sys.exit(1)
+
+
+def detect_container_tool():
+    if shutil.which("docker"):
+        return "docker"
+    elif shutil.which("podman"):
+        return "podman"
+    else:
+        print(
+            "\033[31m\033[1mError:\033[0m "
+            "Neither docker nor podman is installed or enabled"
+        )
+        sys.exit(1)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Build and run myapp container"
+    )
+
+    parser.add_argument(
+        "--use",
+        choices=["docker", "podman"],
+        help="Force container tool"
+    )
+
+    args = parser.parse_args()
+
+    container_tool = args.use or detect_container_tool()
+
+    script_dir = Path(__file__).resolve().parent
+
+    cache_dir = script_dir / ".cache"
+    cache_dir.mkdir(exist_ok=True)
+
+    dockerfile = """\
+        FROM docker.io/pytorch/pytorch:2.13.0-cuda13.2-cudnn9-runtime
+
+        RUN apt-get update && apt-get install -y \\
+            curl \\
+            git \\
+            sudo
+
+        RUN curl https://frankenphp.dev/install.sh | sh
+
+        RUN rm -rf /var/lib/apt/lists/*
+
+        RUN pip install --break-system-packages https://github.com/KittenML/KittenTTS/releases/download/0.8.1/kittentts-0.8.1-py3-none-any.whl
+
+        RUN pip install --break-system-packages fastapi uvicorn 
+    """
+
+    if container_tool == "podman":
+        volume_label = ":Z"
+    else:
+        volume_label = ""
+
+    cache_volume = (
+        f"{cache_dir}:/root/.cache{volume_label}"
+    )
+
+    work_volume = (
+        f"{script_dir}:/workspace{volume_label}"
+    )
+
+    print(
+        f"\033[32mUsing container tool:\033[0m {container_tool}"
+    )
+
+    print(
+        f"\033[34mBuilding image:\033[0m {IMAGE_NAME}"
+    )
+
+    # Build image using Dockerfile from stdin
+    try:
+        subprocess.run(
+            [
+                container_tool,
+                "build",
+                "-t",
+                IMAGE_NAME,
+                "-"
+            ],
+            input=dockerfile,
+            text=True,
+            check=True
+        )
+    except subprocess.CalledProcessError as e:
+        print(f"\033[31m\033[1mError:\033[0m Build failed with exit code {e.returncode}")
+        sys.exit(e.returncode)
+    except Exception as e:
+        print(f"\033[31m\033[1mError:\033[0m Unexpected error during build: {e}")
+        sys.exit(1)
+
+    # Run container
+    run_command(
+        [
+            container_tool,
+            "run",
+            "-it",
+            "--gpus=all",
+            "-v",
+            cache_volume,
+            "-v",
+            work_volume,
+            "-p",
+            "8000:8000",
+            IMAGE_NAME,
+            "python3",
+            "api.py",
+        ]
+    )
+
+
+if __name__ == "__main__":
+    main()

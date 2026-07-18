@@ -1,0 +1,107 @@
+Here are Python programs for each question.
+
+Q1) NumPy Array Operations
+import numpy as np
+
+# Initialize a 3x3 NumPy array
+arr = np.array([[1, 2, 3],
+                [4, 5, 6],
+                [7, 8, 9]])
+
+# Operations
+multiply = arr * 2
+add = arr + 5
+square = arr ** 2
+
+# Display results
+print("Original Array:")
+print(arr)
+
+print("\nArray after multiplying by 2:")
+print(multiply)
+
+print("\nArray after adding 5:")
+print(add)
+
+print("\nSquare of each element:")
+print(square)
+
+Q2) NumPy Array Slicing
+import numpy as np
+
+# Initialize a 3x3 NumPy array
+arr = np.array([[1, 2, 3],
+                [4, 5, 6],
+                [7, 8, 9]])
+
+# Slicing operations
+first_row = arr[0]
+last_column = arr[:, -1]
+sub_array = arr[1:, 1:]
+
+# Display results
+print("Original Array:")
+print(arr)
+
+print("\nFirst Row:")
+print(first_row)
+
+print("\nLast Column:")
+print(last_column)
+
+print("\n2x2 Sub-array:")
+print(sub_array)
+
+Q3) DataFrame of Students
+import pandas as pd
+
+# Create DataFrame
+data = {
+    "Name": ["Alice", "Bob", "Charlie", "David", "Emma",
+             "Frank", "Grace", "Henry", "Ivy", "Jack"],
+    "Marks": [85, 90, 78, 88, 92, 75, 80, 89, 95, 84]
+}
+
+df = pd.DataFrame(data)
+
+# Print DataFrame
+print(df)
+
+Q4) Employee DataFrame with Custom Indices
+import pandas as pd
+
+# Create DataFrame
+data = {
+    "Employee_name": ["John", "Mary", "David", "Sophia", "James"],
+    "Income": [45000, 52000, 48000, 60000, 55000]
+}
+
+df = pd.DataFrame(data, index=['a', 'b', 'c', 'd', 'e'])
+
+# Print DataFrame
+print(df)
+
+Q5) Bar Plot Using Matplotlib
+import matplotlib.pyplot as plt
+
+# Data
+x = ['A', 'B', 'C', 'D', 'E']
+y = [10, 20, 15, 25, 30]
+
+# Create bar plot
+plt.bar(x, y, color='skyblue')
+
+# Labels and title
+plt.xlabel("Categories")
+plt.ylabel("Frequency")
+plt.title("Bar Plot of Category Frequencies")
+
+# Display plot
+plt.show()
+
+
+These programs use:
+
+NumPy (import numpy as np) for array creation, arithmetic, and slicing.
+Pandas (import pandas as pd) for creating DataFrames.
+Matplotlib (import matplotlib.pyplot as plt) for creating the bar chart.
